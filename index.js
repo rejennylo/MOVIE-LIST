@@ -5,6 +5,8 @@ const POSTER_URL = BASE_URL + '/posters/'
 const movies = []
 
 const dataPanel = document.querySelector('#data-panel')
+const searchForm = document.querySelector('#search-form')
+const searchInput = document.querySelector('#search-input')
 
 function renderMovieList(data) {
   let rawHTML= ''
@@ -51,9 +53,22 @@ function showMovieModal (id) {
 
 dataPanel.addEventListener('click', function onPanelClicked(event) {
   if (event.target.matches('.btn-show-movie')){
-    console.log(event.target.dataset)
     showMovieModal(Number(event.target.dataset.id))
   }
+})
+
+searchForm.addEventListener('submit', function onSearchFormSubmitted(event) {
+  event.preventDefault()
+  const keyword = searchInput.value.trim().toLowerCase()
+  let filteredMovies = []
+
+  if (!keyword.length) {
+    return alert('Please enter a valid string')
+  }
+
+  filteredMovies = movies.filter((movie) => movie.title.toLowerCase().includes(keyword))
+
+  renderMovieList(filteredMovies)
 })
 
 axios.get(INDEX_URL)
