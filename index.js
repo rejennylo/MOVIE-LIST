@@ -22,7 +22,7 @@ function renderMovieList(data) {
         </div>
         <div class="card-footer text-muted">
           <button class="btn btn-primary btn-show-movie" data-bs-toggle="modal" data-bs-target="#movie-modal" data-id="${item.id}">More</button>
-          <button class="btn btn-info btn-show-favorite">+</button>
+          <button class="btn btn-info btn-add-favorite" data-id="${item.id}">+</button>
         </div>
       </div>
     </div>
@@ -51,9 +51,21 @@ function showMovieModal (id) {
   .catch((error) => console.log(error))
 }
 
+function addToFavorite (id) {
+  const list = JSON.parse(localStorage.getItem('favoriteMovies')) || []
+  const movie = movies.find((movie) => movie.id === id)
+  if (list.some((movie) => movie.id === id)) {
+    return alert('此電影已經在收藏清單中!')
+  }
+  list.push(movie)
+  localStorage.setItem('favoriteMovies', JSON.stringify(list))
+}
+
 dataPanel.addEventListener('click', function onPanelClicked(event) {
   if (event.target.matches('.btn-show-movie')){
     showMovieModal(Number(event.target.dataset.id))
+  } else if (event.target.matches('.btn-add-favorite')){
+    addToFavorite(Number(event.target.dataset.id))
   }
 })
 
