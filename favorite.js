@@ -2,7 +2,7 @@ const BASE_URL = 'https://movie-list.alphacamp.io'
 const INDEX_URL = BASE_URL + '/api/v1/movies/'
 const POSTER_URL = BASE_URL + '/posters/'
 
-const movies = []
+const movies = JSON.parse(localStorage.getItem('favoriteMovies')) || []
 
 const dataPanel = document.querySelector('#data-panel')
 const searchForm = document.querySelector('#search-form')
@@ -21,7 +21,7 @@ function renderMovieList(data) {
         </div>
         <div class="card-footer text-muted">
           <button class="btn btn-primary btn-show-movie" data-bs-toggle="modal" data-bs-target="#movie-modal" data-id="${item.id}">More</button>
-          <button class="btn btn-info btn-add-favorite" data-id="${item.id}">+</button>
+          <button class="btn btn-danger btn-remove-favorite" data-id="${item.id}">X</button>
         </div>
       </div>
     </div>
@@ -50,41 +50,20 @@ function showMovieModal (id) {
   .catch((error) => console.log(error))
 }
 
-function addToFavorite (id) {
-  const list = JSON.parse(localStorage.getItem('favoriteMovies')) || []
-  const movie = movies.find((movie) => movie.id === id)
-  if (list.some((movie) => movie.id === id)) {
-    return alert('此電影已經在收藏清單中!')
-  }
-  list.push(movie)
-  localStorage.setItem('favoriteMovies', JSON.stringify(list))
+function removeFromFavorite(id) {
+  const movieIndex = movies.findIndex((movie) => movie.id === id)
+  movies.splice(movieIndex, 1)
+  localStorage.setItem('favoriteMovies', JSON.stringify(movies))
+
+  renderMovieList(movies)
 }
 
 dataPanel.addEventListener('click', function onPanelClicked(event) {
   if (event.target.matches('.btn-show-movie')){
     showMovieModal(Number(event.target.dataset.id))
-  } else if (event.target.matches('.btn-add-favorite')){
-    addToFavorite(Number(event.target.dataset.id))
+  } else if (event.target.matches('.btn-remove-favorite')){
+    removeFromFavorite(Number(event.target.dataset.id))
   }
 })
 
-searchForm.addEventListener('submit', function onSearchFormSubmitted(event) {
-  event.preventDefault()
-  const keyword = searchInput.value.trim().toLowerCase()
-  let filteredMovies = []
-
-  if (!keyword.length) {
-    return alert('Please enter a valid string')
-  }
-
-  filteredMovies = movies.filter((movie) => movie.title.toLowerCase().includes(keyword))
-
-  renderMovieList(filteredMovies)
-})
-
-axios.get(INDEX_URL)
-.then((response) => {
-  movies.push(...response.data.results)
-  renderMovieList(movies)
-})
-.catch((error) => console.log(error))
+renderMovieList(movies)
