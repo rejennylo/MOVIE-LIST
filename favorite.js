@@ -51,6 +51,9 @@ function showMovieModal (id) {
 }
 
 function removeFromFavorite(id) {
+  // 如果清單是空的或傳入的 ID 不存在, 則結束該函式
+  if (!movies || !movies.length) return
+
   const movieIndex = movies.findIndex((movie) => movie.id === id)
   movies.splice(movieIndex, 1)
   localStorage.setItem('favoriteMovies', JSON.stringify(movies))
