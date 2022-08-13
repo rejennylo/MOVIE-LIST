@@ -4,12 +4,16 @@ const POSTER_URL = BASE_URL + '/posters/'
 const MOVIES_PER_PAGE = 12
 
 const movies = []
+let filteredMovies = []
+let page = 1
 
 const dataPanel = document.querySelector('#data-panel')
 const searchForm = document.querySelector('#search-form')
 const searchInput = document.querySelector('#search-input')
 const paginator = document.querySelector('#paginator')
+const displayModeControl = document.querySelector('#display-mode-control')
 
+// render table
 function renderMovieList(data) {
   let rawHTML= ''
 
@@ -33,6 +37,26 @@ function renderMovieList(data) {
   dataPanel.innerHTML = rawHTML
 }
 
+// render list
+function renderListView(data) {
+  let rawHTML= ''
+
+  rawHTML += '<ul class="list-group list-group-flush">'
+  data.forEach((item) => {
+    rawHTML += `<li class="list-group-item d-flex justify-content-between">
+                  <h5 class="card-title">${item.title}</h5>
+                  <div class="text-muted">
+                    <button class="btn btn-primary btn-show-movie" data-bs-toggle="modal" data-bs-target="#movie-modal"
+                      data-id="${item.id}">More</button>
+                    <button class="btn btn-info btn-add-favorite" data-id="${item.id}">+</button>
+                  </div>
+                </li>`
+  })
+  rawHTML += '</ul>'
+
+  dataPanel.innerHTML = rawHTML
+}
+
 function renderPaginator(amount) {
   const numberOfPages = Math.ceil(amount / MOVIES_PER_PAGE)
   let rawHTML = ''
@@ -45,8 +69,10 @@ function renderPaginator(amount) {
 }
 
 function getMoviesByPage (page) {
+  const data = filteredMovies.length ? filteredMovies : movies
+
   const startIndex = (page - 1) * MOVIES_PER_PAGE
-  return movies.slice(startIndex, startIndex + MOVIES_PER_PAGE)
+  return data.slice(startIndex, startIndex + MOVIES_PER_PAGE)
 }
 
 function showMovieModal (id) {
@@ -88,15 +114,18 @@ dataPanel.addEventListener('click', function onPanelClicked(event) {
 
 paginator.addEventListener('click', function onPaginatorClicked(event) {
   if (event.target.tagName !== 'A') return
-  const page = Number(event.target.dataset.page)
-  
-  renderMovieList(getMoviesByPage(page))
+  page = Number(event.target.dataset.page)
+
+  if (dataPanel.innerHTML.includes('list-group')) {
+    renderListView(getMoviesByPage(page))
+  }else if (dataPanel.innerHTML.includes('card')) {
+    renderMovieList(getMoviesByPage(page))
+  }
 })
 
 searchForm.addEventListener('submit', function onSearchFormSubmitted(event) {
   event.preventDefault()
   const keyword = searchInput.value.trim().toLowerCase()
-  let filteredMovies = []
 
   if (!keyword.length) {
     return alert('Please enter a valid string')
@@ -104,13 +133,29 @@ searchForm.addEventListener('submit', function onSearchFormSubmitted(event) {
 
   filteredMovies = movies.filter((movie) => movie.title.toLowerCase().includes(keyword))
 
-  renderMovieList(filteredMovies)
+  if (dataPanel.innerHTML.includes('list-group')) {
+    renderPaginator(filteredMovies.length)
+    renderListView(getMoviesByPage(page))
+  }else if (dataPanel.innerHTML.includes('card')) {
+    renderPaginator(filteredMovies.length)
+    renderMovieList(getMoviesByPage(page))
+  }
+})
+
+displayModeControl.addEventListener('click', function changeDisplayMode(event) {
+  if (event.target.id === 'list-mode') {
+    renderPaginator(movies.length)
+    renderListView(getMoviesByPage(page))
+  }else if (event.target.id === 'table-mode') {
+    renderPaginator(movies.length)
+    renderMovieList(getMoviesByPage(page))
+  }
 })
 
 axios.get(INDEX_URL)
 .then((response) => {
   movies.push(...response.data.results)
   renderPaginator(movies.length)
-  renderMovieList(getMoviesByPage(1))
+  renderMovieList(getMoviesByPage(page))
 })
 .catch((error) => console.log(error))
